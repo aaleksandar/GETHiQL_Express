@@ -3,9 +3,7 @@ var logger = require('morgan');
 var bodyParser = require('body-parser');
 
 var api = require('./api/index');
-
 var app = express();
-
 
 ///////////////////////
 // Server Middleware

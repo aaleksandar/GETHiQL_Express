@@ -1,13 +1,22 @@
 let promise = require('bluebird');
+const Pool = require('pg-pool')
+const pool = new Pool({
+    host: 'ethiqldatabase.cle9ykpn9ppr.us-east-1.rds.amazonaws.com',
+    database: 'ethiqldatabase',
+    user: 'ethiqlusername',
+    password: 'SnakeyMalakey123',
+    port: 5432,
+    max: 1,
+    min: 0,
+    idleTimeoutMillis: 3000000,
+    connectionTimeoutMillis: 10000
+});
 
-let options = {
-    // Initialization Options
-    promiseLib: promise
-};
+var PG_CLIENT
+pool.connect().then(c => {
+  PG_CLIENT = c
+})
 
-let pgp = require('pg-promise')(options);
-let connectionString = 'postgres://gethiql_user:foobar123@localhost:5432/gethiql_db';
-let db = pgp(connectionString);
 let firebase = require('firebase');
 firebase.initializeApp({
     apiKey: "AIzaSyCbvVBA5-oWJxrf2jHVrKgvFAHbVkamLcs",
@@ -18,7 +27,6 @@ firebase.initializeApp({
     messagingSenderId: "324567229823"
 })
 
-
 /////////////////////
 // Query Functions
 /////////////////////
@@ -26,9 +34,9 @@ firebase.initializeApp({
 function sql(req, res, next) {
     let query = req.query.q;
 
-    db.any(query)
+    PG_CLIENT.query(query)
     .then(function (data) {
-        firebase.database().ref('/queryResult').set(JSON.stringify(data));
+        firebase.database().ref('/queryResult').set(data.rows);
         res.status(200)
             .json({
                 data: data,
@@ -46,7 +54,7 @@ function sql(req, res, next) {
 function explain(req, res, next) {
     let query = 'EXPLAIN ' + req.query.q;
 
-    db.any(query)
+    PG_CLIENT.any(query)
     .then(function (data) {
         let dbres = data[0]['QUERY PLAN']
         let cost = Math.ceil(parseFloat(dbres.match(/.*cost=.*\.\.([0-9]+\.[0-9]+) rows=.*/)[1]))
