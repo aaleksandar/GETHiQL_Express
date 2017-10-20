@@ -6,7 +6,7 @@ var options = {
 };
 
 var pgp = require('pg-promise')(options);
-var connectionString = 'postgres://postgres:postgres@localhost:5432/gethiql_db';
+var connectionString = 'postgres://gethiql_user:foobar123@localhost:5432/gethiql_db';
 var db = pgp(connectionString);
 
 
@@ -21,17 +21,13 @@ function sql(req, res, next) {
   .then(function (data) {
     res.status(200)
       .json({
-        status: 'success',
         data: data,
-        message: 'Query successful starships'
       });
   })
   .catch(function (err) {
     console.log(err);
     res.status(400)
       .json({
-        status: 'error',
-        // data: data,
         message: 'Bad query'
       });
   });
@@ -42,105 +38,21 @@ function explain(req, res, next) {
 
   db.any(query)
   .then(function (data) {
+    let dbres = data[0]['QUERY PLAN']
+    let cost = Math.ceil(parseFloat(dbres.match(/.*cost=.*\.\.([0-9]+\.[0-9]+) rows=.*/)[1]))
     res.status(200)
       .json({
-        status: 'success',
-        data: data,
-        message: 'Query successful starships'
+        cost: cost,
       });
   })
   .catch(function (err) {
     console.log(err);
     res.status(400)
       .json({
-        status: 'error',
-        // data: data,
         message: 'Bad query'
       });
   });
 }
-
-function getAllStarships(req, res, next) {
-  db.any('SELECT * FROM starships')
-    .then(function (data) {
-      res.status(200)
-        .json({
-          status: 'success',
-          data: data,
-          message: 'Retrieved all starships'
-        });
-    })
-    .catch(function (err) {
-      console.log(err)
-      return next(err);
-    });
-}
-
-function getStarship(req, res, next) {
-  var id = parseInt(req.params.id);
-  db.one('SELECT * FROM starships WHERE id = $1', id)
-    .then(function (data) {
-      res.status(200)
-        .json({
-          status: 'success',
-          data: data,
-          message: 'Retrieved one starship'
-        });
-    })
-    .catch(function (err) {
-      return next(err);
-    });
-}
-
-// function createStarship(req, res, next) {
-//   req.body.launched = parseInt(req.body.launched);
-//   db.none('INSERT INTO starships(name, registry, affiliation, launched, class, captain)' +
-//       'values(${name}, ${registry}, ${affiliation}, ${launched}, ${class}, ${captain})',
-//     req.body)
-//     .then(function () {
-//       res.status(200)
-//         .json({
-//           status: 'success',
-//           message: 'Inserted one starship'
-//         });
-//     })
-//     .catch(function (err) {
-//       return next(err);
-//     });
-// }
-
-// function updateStarship(req, res, next) {
-//   db.none('UPDATE starships SET name=$1, registry=$2, affiliation=$3, launched=$4, class=$5, captain=$6 where id=$7',
-//     [req.body.name, req.body.registry, req.body.affiliation, parseInt(req.body.launched), req.body.class, parseInt(req.params.id)])
-//     .then(function () {
-//       res.status(200)
-//         .json({
-//           status: 'success',
-//           message: 'Updated starship'
-//         });
-//     })
-//     .catch(function (err) {
-//       return next(err);
-//     });
-// }
-
-// function removeStarship(req, res, next) {
-//   var id = parseInt(req.params.id);
-//   db.result('DELETE FROM starships WHERE id = $1', id)
-//     .then(function (result) {
-//       /* jshint ignore:start */
-//       res.status(200)
-//         .json({
-//           status: 'success',
-//           message: 'Removed ${result.rowCount} starships'
-//         });
-//       /* jshint ignore:end */
-//     })
-//     .catch(function (err) {
-//       return next(err);
-//     });
-// }
-
 
 /////////////
 // Exports
@@ -149,9 +61,4 @@ function getStarship(req, res, next) {
 module.exports = {
     sql: sql,
     explain: explain,
-    getAllStarships: getAllStarships,
-    getStarship: getStarship,
-    // createStarship: createStarship,
-    // updateStarship: updateStarship,
-    // removeStarship: removeStarship
 };
