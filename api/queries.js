@@ -12,7 +12,13 @@ const pool = new Pool({
     connectionTimeoutMillis: 10000
 });
 
-var PG_CLIENT
+let Web3 = require('web3')
+let web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/I3PO9wZvmFivuxZfKv8E'))
+let toAddress = '0x7E753B04BD390D37d26F4B062ddE211785d4DDF1'
+let AsyncPolling = require('async-polling')
+let child_process = require('child_process')
+
+let PG_CLIENT
 pool.connect().then(c => {
   PG_CLIENT = c
 })
@@ -72,6 +78,11 @@ function explain(req, res, next) {
     });
 }
 
+function tx(req, res, next) {
+    let f = child_process.fork('poll.js', [req.query.tx])
+    res.send('foo')
+}
+
 /////////////
 // Exports
 /////////////
@@ -79,4 +90,5 @@ function explain(req, res, next) {
 module.exports = {
     sql: sql,
     explain: explain,
+    tx: tx
 };
