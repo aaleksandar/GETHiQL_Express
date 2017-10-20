@@ -1,13 +1,22 @@
-var promise = require('bluebird');
+let promise = require('bluebird');
 
-var options = {
-  // Initialization Options
-  promiseLib: promise
+let options = {
+    // Initialization Options
+    promiseLib: promise
 };
 
-var pgp = require('pg-promise')(options);
-var connectionString = 'postgres://gethiql_user:foobar123@localhost:5432/gethiql_db';
-var db = pgp(connectionString);
+let pgp = require('pg-promise')(options);
+let connectionString = 'postgres://gethiql_user:foobar123@localhost:5432/gethiql_db';
+let db = pgp(connectionString);
+let firebase = require('firebase');
+firebase.initializeApp({
+    apiKey: "AIzaSyCbvVBA5-oWJxrf2jHVrKgvFAHbVkamLcs",
+    authDomain: "ethiql-3d8a6.firebaseapp.com",
+    databaseURL: "https://ethiql-3d8a6.firebaseio.com",
+    projectId: "ethiql-3d8a6",
+    storageBucket: "ethiql-3d8a6.appspot.com",
+    messagingSenderId: "324567229823"
+})
 
 
 /////////////////////
@@ -15,43 +24,44 @@ var db = pgp(connectionString);
 /////////////////////
 
 function sql(req, res, next) {
-  var query = req.query.q;
+    let query = req.query.q;
 
-  db.any(query)
-  .then(function (data) {
-    res.status(200)
-      .json({
-        data: data,
-      });
-  })
-  .catch(function (err) {
-    console.log(err);
-    res.status(400)
-      .json({
-        message: 'Bad query'
-      });
-  });
+    db.any(query)
+    .then(function (data) {
+        firebase.database().ref('/queryResult').set(JSON.stringify(data));
+        res.status(200)
+            .json({
+                data: data,
+            });
+    })
+    .catch(function (err) {
+        console.log(err);
+        res.status(400)
+            .json({
+                message: 'Bad query'
+            });
+    });
 }
 
 function explain(req, res, next) {
-  var query = 'EXPLAIN ' + req.query.q;
+    let query = 'EXPLAIN ' + req.query.q;
 
-  db.any(query)
-  .then(function (data) {
-    let dbres = data[0]['QUERY PLAN']
-    let cost = Math.ceil(parseFloat(dbres.match(/.*cost=.*\.\.([0-9]+\.[0-9]+) rows=.*/)[1]))
-    res.status(200)
-      .json({
-        cost: cost,
-      });
-  })
-  .catch(function (err) {
-    console.log(err);
-    res.status(400)
-      .json({
-        message: 'Bad query'
-      });
-  });
+    db.any(query)
+    .then(function (data) {
+        let dbres = data[0]['QUERY PLAN']
+        let cost = Math.ceil(parseFloat(dbres.match(/.*cost=.*\.\.([0-9]+\.[0-9]+) rows=.*/)[1]))
+        res.status(200)
+            .json({
+                cost: cost,
+            });
+    })
+    .catch(function (err) {
+        console.log(err);
+        res.status(400)
+            .json({
+                message: 'Bad query'
+            });
+    });
 }
 
 /////////////
