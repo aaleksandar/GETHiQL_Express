@@ -6,7 +6,7 @@ var options = {
 };
 
 var pgp = require('pg-promise')(options);
-var connectionString = 'postgres://postgres:postgres@localhost:5432/startrek'; // startrek is an example database name
+var connectionString = 'postgres://postgres:postgres@localhost:5432/gethiql_db';
 var db = pgp(connectionString);
 
 
@@ -27,6 +27,7 @@ function sql(req, res, next) {
       });
   })
   .catch(function (err) {
+    console.log(err);
     res.status(400)
       .json({
         status: 'error',
@@ -49,6 +50,7 @@ function explain(req, res, next) {
       });
   })
   .catch(function (err) {
+    console.log(err);
     res.status(400)
       .json({
         status: 'error',

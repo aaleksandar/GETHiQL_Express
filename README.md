@@ -25,6 +25,7 @@ Sample call:
 
 ```
 http://localhost:3000/api/sql?q=SELECT * FROM starships
+http://localhost:3000/api/explain?q=SELECT * FROM starships
 ```
 
 ## Setting up your queries
