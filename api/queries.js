@@ -1,4 +1,4 @@
-let promise = require('bluebird');
+const promise = require('bluebird');
 const Pool = require('pg-pool')
 const pool = new Pool({
     host: 'ethiqldatabase.cle9ykpn9ppr.us-east-1.rds.amazonaws.com',
@@ -12,18 +12,12 @@ const pool = new Pool({
     connectionTimeoutMillis: 10000
 });
 
-let Web3 = require('web3')
-let web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/I3PO9wZvmFivuxZfKv8E'))
-let toAddress = '0x7E753B04BD390D37d26F4B062ddE211785d4DDF1'
-let AsyncPolling = require('async-polling')
-let child_process = require('child_process')
-
 let PG_CLIENT
 pool.connect().then(c => {
-  PG_CLIENT = c
+    PG_CLIENT = c
 })
 
-let firebase = require('firebase');
+const firebase = require('firebase');
 firebase.initializeApp({
     apiKey: "AIzaSyCbvVBA5-oWJxrf2jHVrKgvFAHbVkamLcs",
     authDomain: "ethiql-3d8a6.firebaseapp.com",
@@ -33,12 +27,16 @@ firebase.initializeApp({
     messagingSenderId: "324567229823"
 })
 
+const AWS = require('aws-sdk')
+AWS.config.loadFromPath('./config.json')
+const sqs = new AWS.SQS({apiVersion: '2012-11-05'})
+
 /////////////////////
 // Query Functions
 /////////////////////
 
 function sql(req, res, next) {
-    let query = req.query.q;
+    const query = req.query.q;
 
     PG_CLIENT.query(query)
     .then(function (data) {
@@ -58,12 +56,12 @@ function sql(req, res, next) {
 }
 
 function explain(req, res, next) {
-    let query = 'EXPLAIN ' + req.query.q;
+    const query = 'EXPLAIN ' + req.query.q;
 
     PG_CLIENT.any(query)
     .then(function (data) {
-        let dbres = data[0]['QUERY PLAN']
-        let cost = Math.ceil(parseFloat(dbres.match(/.*cost=.*\.\.([0-9]+\.[0-9]+) rows=.*/)[1]))
+        const dbres = data[0]['QUERY PLAN']
+        const cost = Math.ceil(parseFloat(dbres.match(/.*cost=.*\.\.([0-9]+\.[0-9]+) rows=.*/)[1]))
         res.status(200)
             .json({
                 cost: cost,
@@ -79,8 +77,24 @@ function explain(req, res, next) {
 }
 
 function tx(req, res, next) {
-    let f = child_process.fork('poll.js', [req.query.tx])
-    res.send('foo')
+    const txHash = req.query.tx
+    const params = {
+        MessageBody: txHash,
+        QueueUrl: "https://sqs.us-east-1.amazonaws.com/431180689513/ethiqlqueue"
+    };
+
+    sqs.sendMessage(params, function(err, data) {
+        if (err) {
+            console.log("Error", err);
+        } else {
+            console.log("Success sent:", data.MessageId, ",", txHash);
+        }
+    })
+
+    res.status(200)
+        .json({
+            message: 'Success'
+        })
 }
 
 /////////////
