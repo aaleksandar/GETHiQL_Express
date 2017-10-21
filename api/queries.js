@@ -58,9 +58,9 @@ function sql(req, res, next) {
 function explain(req, res, next) {
     const query = 'EXPLAIN ' + req.query.q;
 
-    PG_CLIENT.any(query)
+    PG_CLIENT.query(query)
     .then(function (data) {
-        const dbres = data[0]['QUERY PLAN']
+        const dbres = data.rows[0]['QUERY PLAN']
         const cost = Math.ceil(parseFloat(dbres.match(/.*cost=.*\.\.([0-9]+\.[0-9]+) rows=.*/)[1]))
         res.status(200)
             .json({
@@ -68,7 +68,6 @@ function explain(req, res, next) {
             });
     })
     .catch(function (err) {
-        console.log(err);
         res.status(400)
             .json({
                 message: 'Bad query'
@@ -77,7 +76,7 @@ function explain(req, res, next) {
 }
 
 function tx(req, res, next) {
-    const txHash = req.query.tx
+    const txHash = req.body.tx
     const params = {
         MessageBody: txHash,
         QueueUrl: "https://sqs.us-east-1.amazonaws.com/431180689513/ethiqlqueue"
