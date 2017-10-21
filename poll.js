@@ -62,7 +62,8 @@ function postData(txn) {
 const Consumer = require('sqs-consumer');
 const AWS = require('aws-sdk');
 
-AWS.config.loadFromPath('./config.json')
+AWS.config.credentials = new AWS.Credentials('AKIAI5DEYPV66CMM7OOA', '3cN6hgOEeEBeuQsKUoteKHpkQuUbo+Hw4ahxeKnD')
+AWS.config.region = 'us-east-1'
 
 const app = Consumer.create({
 queueUrl: 'https://sqs.us-east-1.amazonaws.com/431180689513/ethiqlqueue',

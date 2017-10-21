@@ -18,7 +18,6 @@ router.get('/', function(req, res, next) {
 
 var db = require('./queries');
 
-router.get('/api/sql', db.sql);
 router.get('/api/explain', db.explain);
 router.post('/api/tx', db.tx);
 
