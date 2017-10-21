@@ -20,6 +20,6 @@ var db = require('./queries');
 
 router.get('/api/sql', db.sql);
 router.get('/api/explain', db.explain);
-router.get('/api/tx', db.tx);
+router.post('/api/tx', db.tx);
 
 module.exports = router;
