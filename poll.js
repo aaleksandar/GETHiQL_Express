@@ -29,18 +29,21 @@ pool.connect().then(c => {
     PG_CLIENT = c
 })
 
+const sleep = require('sleep')
+
 function processMessage(txHash) {
     let i = 0
     let done = false
     while (!done) {
         console.log('polling infura')
         let txn = web3.eth.getTransaction(txHash)
-        if (txn || i >= 9) {
+        if (txn || i >= 19) {
             postData(txn)
             done = true
             console.log('stop')
         }
         i++
+        sleep.sleep(1)
     }
 }
 
